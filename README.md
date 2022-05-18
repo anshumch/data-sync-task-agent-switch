@@ -9,7 +9,7 @@ git clone https://github.com/anshumch/data-sync-task-agent-switch.git
 ````
 - Run the following command:
 ````bash
-sam deploy --guided"
+sam deploy --guided
 ````
 - Pass the following values:
 ![image](https://user-images.githubusercontent.com/100800132/168938651-e38dcafc-cae6-4057-9da6-5345521c6aac.png)
