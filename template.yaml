@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues:
+      - dev
+      - test
+      - prod
+
+Resources:
+  lambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: "*"
+          PolicyName: lambda1Logging
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - datasync:ListTasks
+                  - datasync:DescribeTask
+                  - datasync:ListAgents
+                  - datasync:DescribeAgent
+                  - datasync:UpdateLocationNfs
+                  - datasync:DescribeLocationNfs
+                Effect: Allow
+                Resource: "*"
+          PolicyName: lambda1DataSync
+  
+  ApiDeployment:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+
+  updateDataSyncAgentsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: lambda-code/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Role: !GetAtt lambdaIAMRole.Arn
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /update-agents
+            Method: post
+            RestApiId: !Ref ApiDeployment
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  updateDataSyncAgentsFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for eventTypeCodesType function"
+    Value: !Sub "https://${ApiDeployment}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/update-agents/"
+  updateDataSyncAgentsFunction:
+    Description: "updateDataSyncAgentsFunction Function ARN"
+    Value: !GetAtt updateDataSyncAgentsFunction.Arn
+  updateDataSyncAgentsFunctionIamRole:
+    Description: "Implicit IAM Role created for eventTypeCodesType Function"
+    Value: !GetAtt lambdaIAMRole.Arn
