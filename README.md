@@ -1,6 +1,6 @@
 # data-sync-task-agent-switch
 
-## The tool enables an user switch DataSync tasks between agents
+## The tool enables an user to switch DataSync tasks between agents
 
 Steps to deploy:
 - Clone the repo
